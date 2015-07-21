@@ -46,12 +46,11 @@ function startProcess(config,port,others,next){
   var args = [
     config.load_balanced?'vertical':'service',
     name,
-    'http.port='+port
   ].concat(others.map(function(item){
     //need to make sure that any services that are required by other services
     return item.name+'.ip='+item.ip;
   }));
-  var child = cp.fork(__dirname+'/../index.js',args);
+  var child = cp.fork(__dirname+'/../index.js',args,{env:{PORT:port}});
   var cl, el;
   child.once('error', el = function(e){
     child.removeListener('message',cl);

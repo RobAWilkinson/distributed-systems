@@ -1,0 +1,22 @@
+{
+  "name": "distributed-systems",
+  "version": "1.0.0",
+  "description": "Ip addresses",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/formula1/Distributed-Systems-Example.git"
+  },
+  "author": "formula1 <samtobia@gmail.com> (https://github.com/formula1)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/formula1/Distributed-Systems-Example/issues"
+  },
+  "homepage": "https://github.com/formula1/Distributed-Systems-Example",
+  "dependencies": {
+    "node-ip": "^0.1.2"
+  }
+}

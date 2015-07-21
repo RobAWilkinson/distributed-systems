@@ -1,3 +1,4 @@
+var async = require('async');
 module.exports = WorkerPool;
 
 function WorkerPool(max_per_worker, min_workers, max_workers){
@@ -12,6 +13,28 @@ function WorkerPool(max_per_worker, min_workers, max_workers){
   this.max_workers = max_workers;
 }
 
+WorkerPool.prototype.getWorker = function(next){
+  var worker;
+  if(this.workers.length === 0){
+    if(this.workLength === this.max_workers){
+      return next();
+    }
+    worker = this.createWorker();
+    this.workLength++;
+  }else{
+    //Get the top one
+    worker = this.workers.shift();
+  }
+  next(void 0, worker);
+};
+
+Worker.prototype.emptyWorker = function(worker){
+  if(_this.workerLength > min_workers){
+    _this.destroyWorker(worker);
+    _this.workers.splice(_this.workers.indexOf(worker),1);
+  }
+};
+
 WorkerPool.prototype.createWorker = function(){
   throw new Error('this method createWorker is abstract');
 };
@@ -20,41 +43,42 @@ WorkerPool.prototype.destroyWorker = function(worker){
 };
 
 WorkerPool.prototype.giveWork = function(data,next){
-  var worker;
   //If we have no workers available create a new worker
-  if(this.workers.length === 0){
-    if(this.workLength === this.max_workers){
-      return this.queue.push({data:data,next:next});
-    }
-    worker = this.createWorker();
-    this.workLength++;
-  }else{
-    //Get the top one
-    worker = this.workers.shift();
-  }
   var _this = this;
-  worker.giveWork(data,function(err,data){
-    if(worker.isMaxed){
-      if(_this.queue.length){
-        var work = _this.queue.shift();
-        return worker.giveWork(work.data,work.length);
+  async.waterfall([
+    _this.getWorker.bind(this),
+    function(worker,next){
+      if(arguments.length === 1){
+        // add next to queue
+        return this.queue.push(worker);
       }
-      _this.workers.push(worker);
-      worker.isMaxed = false;
-    }else if (worker.workLength === 0) {
-      if(_this.workerLength > min_workers){
-        _this.destroyWorker(worker);
-        _this.workers.splice(_this.workers.indexOf(worker),1);
+      next(void 0,worker);
+    },
+    function(worker,next){
+      worker.jobs++;
+      if(worker.jobs === _this.max_per_worker){
+        worker.isMaxed = true;
+      }else{
+        _this.workers.push(worker);
+      }
+      worker.giveWork(data,next.bind(void 0,void 0,worker));
+    }
+  ],function(worker,err,data){
+    process.nextTick(function(){
+      next(err,data);
+    });
+    worker.jobs--;
+    if(worker.jobs === _this.max_per_worker-1){
+      if(_this.queue.length){
+        _this.queue.shift()(worker);
+      }else{
+        _this.workers.push(worker);
       }
     }
-    next(err,data);
+    if (worker.jobs === 0) {
+      _this.emptyWorker(worker);
+    }
   });
-
-  if(worker.workLength === this.max_per_worker){
-    worker.isMaxed = true;
-  }else{
-    this.workers.push(worker);
-  }
 };
 
 

@@ -24,7 +24,7 @@ WorkerPool.prototype.giveWork = function(data,next){
   var worker;
   for(var i=0,l=this.workers.length;i<l;i++){
     worker = this.workers[i];
-    if(worker.workLength === this.max_per_worker) continue;
+    if(worker.jobs === this.max_per_worker) continue;
     return this.giveWorkToWorker(worker,data,next);
   }
   if(this.workers.length === this.max_workers){
