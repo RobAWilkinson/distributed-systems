@@ -21,6 +21,7 @@
     "express": "^4.13.1",
     "express-fileuploader": "0.0.7",
     "formidable": "^1.0.17",
-    "gm": "^1.18.1"
+    "gm": "^1.18.1",
+    "hat": "0.0.3"
   }
 }
