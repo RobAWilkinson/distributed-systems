@@ -22,9 +22,15 @@ var bouncy = require('bouncy');
 var RoundRobin = require("../abstract/RoundRobin");
 var ip = require("node-ip");
 var url = require('url');
-module.exports = function(proxyPort,workerListenerPort,validRequest,nameParser){
+module.exports =
+
+function makeFindable(port,name,next){
+  require('./finding/findable')(port,'proxy',next);
+};
+
+function createProxyServer(proxyPort,workerServer,validRequest,nameParser,next){
   var namedWorkers = {};
-  var proxyListener = new ws.Server();
+  var proxyListener = new ws.Server(workerServer);
   proxyListener.on("connection",function(ws){
     if(!validRequest(ws.upgradeReq)) return ws.close();
     var uri = url.parse(ws.upgradeReq.url,true);
@@ -52,6 +58,7 @@ module.exports = function(proxyPort,workerListenerPort,validRequest,nameParser){
     bounce(nameport[name].host,nameport[name].port);
   });
   server.listen(proxyPort,function(){
-    console.log("loadBalancer listening on "+ip.address()+":"+loadBalancerPort);
+    console.log("proxy Server listening on "+ip.address()+":"+proxyPort);
+    next();
   });
-};
+}

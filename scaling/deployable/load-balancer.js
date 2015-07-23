@@ -17,13 +17,21 @@
 */
 
 var bouncy = require('bouncy');
-var RoundRobin = require("../abstract/RoundRobin");
 var ip = require("node-ip");
 var url = require('url');
-module.exports = function(loadBalancerPort,workerListenerPort,validRequest){
+
+module.exports = function(){
+
+};
+
+function makeFindable(port,name,next){
+  require('./finding/findable')(port,'loadBalancer-'+name,next);
+}
+
+function createLoadBalancer(loadBalancerPort,findableServer,validRequest,next){
   var workers = [];
   var i = -1;
-  var loadBalancer = new ws.Server();
+  var loadBalancer = new ws.Server(findableServer);
   loadBalancer.on("connection",function(ws){
     if(!validRequest(ws.upgradeReq)) return ws.close();
     var port = url.parse(ws.upgradeReq.url,true).query.port;
@@ -46,5 +54,23 @@ module.exports = function(loadBalancerPort,workerListenerPort,validRequest){
   });
   server.listen(loadBalancerPort,function(){
     console.log("loadBalancer listening on "+ip.address()+":"+loadBalancerPort);
+    next();
   });
-};
+}
+
+function connectToProxy(proxyPort,name,next){
+  scouter(function(text){
+    text = text.split('-');
+    return text[0] === 'proxy';
+  },function(err,ips){
+    if(err) throw err;
+    if(ips.length === 0){
+      throw new Error('no ips found');
+    }
+    if(ips.length > 1){
+      throw new Error('too many ips found');
+    }
+    var client = new ws("ws://"+ips[0]+":"+proxyPort+"?port="+port+"&name="+name);
+    next(void 0,client);
+  });
+}

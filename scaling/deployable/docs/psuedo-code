@@ -1,0 +1,33 @@
+There is a single Proxy Server that will route traffic
+- This would generally be handled by dns, however we would have to set it up on our network
+- http://askubuntu.com/questions/217303/setup-dns-server-for-local-network-with-dhcp-for-use-with-apache
+
+Proxy Server/DNS Resolver
+- Has a List of names it can resolve to IPs
+- listens to subdomains, domains or path (or even get parameter)
+  -If on the list-Directs or Proxies to the registrator
+- listens for a computer to register with it
+  - On registration-Adds name to the list
+  - On disconnect-Removes it from the list
+
+Any Computer can register onto the Proxy Server/DNS
+- Can Either Be a Load Balancer or a Single Instance
+
+As a Load Balancer
+- Connects to proxy and notifies it of availability
+- Has a List of IPs
+- Has a current Ip
+- listens on a port for requests
+  - On request
+    - proxy Request and send it to Current Ip
+    - Get next IP
+- listens for a computer to register with it
+  - On registration-Adds name to the list
+  - On disconnect-Removes it from the list
+
+As a Single Instance
+- Connects to proxy and notifies it of availability
+- listens on a port for requests
+  - On request - Do work
+
+

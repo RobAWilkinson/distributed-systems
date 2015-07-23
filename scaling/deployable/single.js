@@ -1,10 +1,10 @@
 var ws = require("ws");
 var scouter = require("../utils/scouter");
-module.exports = function(file,port,name,loadBalancerPort){
-  role = role.split('-');
+
+function connectToProxy(file,proxyPort,port,name,next){
   scouter(function(text){
     text = text.split('-');
-    return text[0] === 'loadBalancer' && text[1] === role[1];
+    return text[0] === 'proxy';
   },function(err,ips){
     if(err) throw err;
     if(ips.length === 0){
@@ -14,7 +14,8 @@ module.exports = function(file,port,name,loadBalancerPort){
       throw new Error('too many ips found');
     }
     require(file)(port,function(){
-      var client = new ws("ws://"+ips[0]+":"+loadBalancerPort+"?port="+port);
+      var client = new ws("ws://"+ips[0]+":"+proxyPort+"?port="+port+"&name="+name);
+      next(void 0,client);
     });
   });
-};
+}
